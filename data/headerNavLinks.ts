@@ -3,7 +3,7 @@ const headerNavLinks = [
   { href: '/blog', title: 'Bài Viết' },
   { href: '/tags', title: 'Tags' },
   { href: '/projects', title: 'Các Dự Án' },
-  { href: '/about', title: 'Về Tôi' },
+  { href: '/about', title: 'Giới Thiệu' },
 ]
 
 export default headerNavLinks
