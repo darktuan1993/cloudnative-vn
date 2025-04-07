@@ -9,7 +9,7 @@ interface Props {
 }
 
 const inter = Inter({
-  subsets: ['latin'],
+  subsets: ['vietnamese'],
 })
 
 const LayoutWrapper = ({ children }: Props) => {
