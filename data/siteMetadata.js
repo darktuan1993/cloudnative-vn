@@ -5,10 +5,11 @@ const siteMetadata = {
   headerTitle: 'CLOUDNATIVE-VN blogs',
   description:
     'Tại đây, bạn sẽ tìm thấy những bài viết chuyên sâu và thực tiễn dành cho DevOps, Kiến trúc hệ thống (Solution Architecture) và Quản trị hệ thống (System Administration) — được cập nhật liên tục nhằm mang đến góc nhìn đa chiều, kinh nghiệm thực chiến và giải pháp tối ưu cho người làm công nghệ.',
-  language: 'en-us',
+  // language: 'en-us',
+  language: 'vi-vn',
   theme: 'dark', // system, dark or light
-  siteUrl: 'https://cloudnative-vn.com/',
-  siteRepo: 'https://github.com/timlrx/tailwind-nextjs-starter-blog',
+  siteUrl: 'https://cloudnative-vn.com',
+  siteRepo: 'https://github.com',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,
   // mastodon: 'https://mastodon.social/@mastodonuser',
@@ -22,7 +23,7 @@ const siteMetadata = {
   instagram: 'https://www.instagram.com',
   medium: 'https://medium.com',
   bluesky: 'https://bsky.app/',
-  locale: 'en-US',
+  locale: 'vi-VN',
   // set to true if you want a navbar fixed to the top
   stickyNav: false,
   analytics: {
