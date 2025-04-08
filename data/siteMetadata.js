@@ -1,21 +1,20 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: 'TuanBach',
+  title: 'Trang cá nhân của Bạch Đăng Tuấn',
   author: 'Bạch Đăng Tuấn',
   headerTitle: 'TuanBach',
   description:
     'Tại đây, bạn sẽ tìm thấy những bài viết chuyên sâu và thực tiễn dành cho DevOps, Kiến trúc hệ thống (Solution Architecture) và Quản trị hệ thống (System Administration) — được cập nhật liên tục nhằm mang đến góc nhìn đa chiều, kinh nghiệm thực chiến và giải pháp tối ưu cho người làm công nghệ.',
   language: 'en-us',
-  theme: 'system', // system, dark or light
+  theme: 'dark', // system, dark or light
   siteUrl: 'https://tailwind-nextjs-starter-blog.vercel.app',
   siteRepo: 'https://github.com/timlrx/tailwind-nextjs-starter-blog',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,
-  mastodon: 'https://mastodon.social/@mastodonuser',
+  // mastodon: 'https://mastodon.social/@mastodonuser',
   email: 'address@yoursite.com',
   github: 'https://github.com',
   x: 'https://twitter.com/x',
-  // twitter: 'https://twitter.com/Twitter',
   facebook: 'https://facebook.com',
   youtube: 'https://youtube.com',
   linkedin: 'https://www.linkedin.com',
