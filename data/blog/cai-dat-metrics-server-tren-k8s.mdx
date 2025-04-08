@@ -1,0 +1,149 @@
+---
+title: 'Cài đặt Metrics Server trong Kubernetes (K8s)'
+description: 'Hướng dẫn cài đặt và kiểm tra Metrics Server để theo dõi tài nguyên trong cụm Kubernetes'
+date: '2024-04-08'
+tags: ['Kubernetes', 'Metrics Server', 'Giám sát', 'DevOps']
+author: 'Bạch Đăng Tuấn'
+---
+
+# Cài đặt Metrics Server trong Kubernete
+
+**Kubernetes (K8s) Metrics Server** là một thành phần trong cụm Kubernetes có nhiệm vụ thu thập và tổng hợp dữ liệu về tài nguyên (như CPU và RAM) từ các **node** và **pod**. Dữ liệu này hỗ trợ việc:
+
+- Giám sát và tối ưu hóa sử dụng tài nguyên
+- Phát hiện sự cố tiềm ẩn
+- Nâng cao hiệu suất toàn cụm
+
+Metrics Server cung cấp một API endpoint để các công cụ khác truy vấn và hiển thị dữ liệu tài nguyên.
+
+---
+
+## 📑 Mục Lục
+
+1. [Yêu cầu hệ thống](#yeu-cau-he-thong)
+2. [Bước 1: Tải xuống Metrics Server Manifest](#buoc-1-tai-xuong-metrics-server-manifest)
+3. [Bước 2: Chỉnh sửa file YAML của Metrics Server](#buoc-2-chinh-sua-file-yaml-cua-metrics-server)
+4. [Bước 3: Triển khai Metrics Server](#buoc-3-trien-khai-metrics-server)
+5. [Bước 4: Kiểm tra Metrics Server đã triển khai](#buoc-4-kiem-tra-metrics-server-da-trien-khai)
+6. [Bước 5: Kiểm tra hoạt động Metrics Server](#buoc-5-kiem-tra-hoat-dong-metrics-server)
+
+---
+
+<h2 id="yeu-cau-he-thong">🧰 Yêu Cầu Hệ Thống</h2>
+
+- Một cụm Kubernetes (phiên bản v1.21 trở lên) đang hoạt động
+- Đã cài đặt công cụ dòng lệnh `kubectl` và kết nối với cụm
+- Có quyền tạo và chỉnh sửa tài nguyên Kubernetes
+
+---
+
+<h2 id="buoc-1-tai-xuong-metrics-server-manifest">⬇️ Bước 1: Tải Xuống Metrics Server Manifest</h2>
+
+Tải file `components.yaml` mới nhất từ GitHub chính thức của Metrics Server:
+
+```bash
+curl -LO https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
+
+👉 Nếu bạn cần chế độ **High Availability (HA)**:
+
+```bash
+curl -LO https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/high-availability-1.21+.yaml
+```
+
+---
+
+<h2 id="buoc-2-chinh-sua-file-yaml-cua-metrics-server">
+  ✏️ Bước 2: Chỉnh Sửa File YAML Của Metrics Server
+</h2>
+
+Mở file YAML để chỉnh sửa:
+
+```bash
+vi components.yaml
+```
+
+### Tìm phần container có `args:` và thêm dòng:
+
+```yaml
+- --kubelet-insecure-tls
+```
+
+![kube-apiserver](/static/images/metricsserver.png)
+{/* ![kube-apiserver.yaml](https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png) */}
+Dòng này cho phép Metrics Server kết nối với kubelet không cần xác thực TLS (thường dùng khi kubelet chưa cấu hình CA đúng cách).
+
+### Sau đó, thêm cấu hình `hostNetwork: true` vào phần `spec` để container có thể sử dụng mạng của node:
+
+```yaml
+spec:
+  hostNetwork: true
+```
+
+Lưu file và thoát.
+
+---
+
+<h2 id="buoc-3-trien-khai-metrics-server">🚀 Bước 3: Triển Khai Metrics Server</h2>
+
+Dùng `kubectl` để triển khai Metrics Server:
+
+```bash
+kubectl apply -f components.yaml
+```
+
+Lệnh này sẽ tạo ra các tài nguyên (Deployment, Service, RBAC…) trong cụm.
+
+---
+
+<h2 id="buoc-4-kiem-tra-metrics-server-da-trien-khai">
+  🔍 Bước 4: Kiểm Tra Metrics Server Đã Triển Khai
+</h2>
+
+Kiểm tra trạng thái của các pod trong namespace `kube-system`:
+
+```bash
+kubectl get pods -n kube-system
+```
+
+Bạn sẽ thấy một pod có tên `metrics-server-xxxxx` đang ở trạng thái `Running` nếu triển khai thành công.
+
+---
+
+<h2 id="buoc-5-kiem-tra-hoat-dong-metrics-server">📊 Bước 5: Kiểm Tra Hoạt Động Metrics Server</h2>
+
+### Kiểm tra tài nguyên sử dụng của các node:
+
+```bash
+kubectl top nodes
+```
+
+Bạn sẽ thấy thông tin CPU và RAM đang được sử dụng cho từng node.
+
+### Kiểm tra tài nguyên các pod:
+
+```bash
+kubectl top pod
+```
+
+Hoặc cụ thể namespace (ví dụ `kube-system`):
+
+```bash
+kubectl top pod -n kube-system
+```
+
+![kube-apiserver](/static/images/Metrics-Server-Pods-Status-Kube-System.webp)
+
+Nếu bạn thấy các số liệu xuất hiện → Metrics Server hoạt động bình thường ✅
+
+---
+
+## ✅ Tổng Kết
+
+Sau khi hoàn tất 5 bước trên, bạn đã cài đặt thành công Metrics Server để:
+
+- Giám sát tài nguyên trong cụm
+- Kết hợp với HPA (Horizontal Pod Autoscaler)
+- Nâng cao năng lực quản lý Kubernetes
+
+Nếu bạn gặp khó khăn trong quá trình triển khai, hãy để lại câu hỏi để được hỗ trợ thêm!

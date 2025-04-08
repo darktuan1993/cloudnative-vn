@@ -1,7 +1,6 @@
 {
-  "multi-author": 2,
-  "next-js": 3,
-  "feature": 3,
-  "tailwind": 1,
-  "guide": 1
+  "kubernetes": 2,
+  "metrics-server": 2,
+  "giám-sát": 2,
+  "devops": 2
 }
