@@ -2,7 +2,7 @@
 const siteMetadata = {
   title: 'Blog Cloud Native Việt Nam',
   author: 'Bạch Đăng Tuấn',
-  headerTitle: 'CLOUDNATIVE-VN blogs',
+  headerTitle: 'CloudNative-VN',
   description:
     'Tại đây, bạn sẽ tìm thấy những bài viết chuyên sâu và thực tiễn dành cho DevOps, Kiến trúc hệ thống (Solution Architecture) và Quản trị hệ thống (System Administration) — được cập nhật liên tục nhằm mang đến góc nhìn đa chiều, kinh nghiệm thực chiến và giải pháp tối ưu cho người làm công nghệ.',
   // language: 'en-us',
