@@ -124,6 +124,7 @@ export default function ListLayoutWithTags({
             </div>
           </div>
           <div>
+            {/* Bên phải màn h */}
             <ul>
               {displayPosts.map((post) => {
                 const { path, date, title, summary, tags } = post
@@ -138,7 +139,7 @@ export default function ListLayoutWithTags({
                           </time>
                         </dd>
                       </dl>
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <div>
                           <h2 className="text-2xl leading-8 font-bold tracking-tight">
                             <Link href={`/${path}`} className="text-gray-900 dark:text-gray-100">
@@ -146,6 +147,7 @@ export default function ListLayoutWithTags({
                             </Link>
                           </h2>
                           <div className="flex flex-wrap">
+                            <span className="pr-3">Tags: </span>
                             {tags?.map((tag) => <Tag key={tag} text={tag} />)}
                           </div>
                         </div>
@@ -154,6 +156,7 @@ export default function ListLayoutWithTags({
                         </div>
                       </div>
                     </article>
+                    <hr></hr>
                   </li>
                 )
               })}
