@@ -1,13 +1,13 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: 'Trang cá nhân của Bạch Đăng Tuấn',
+  title: 'Blog Cloud Native Việt Nam',
   author: 'Bạch Đăng Tuấn',
-  headerTitle: 'TuanBach',
+  headerTitle: 'CloudNative-VN blogs',
   description:
     'Tại đây, bạn sẽ tìm thấy những bài viết chuyên sâu và thực tiễn dành cho DevOps, Kiến trúc hệ thống (Solution Architecture) và Quản trị hệ thống (System Administration) — được cập nhật liên tục nhằm mang đến góc nhìn đa chiều, kinh nghiệm thực chiến và giải pháp tối ưu cho người làm công nghệ.',
   language: 'en-us',
   theme: 'dark', // system, dark or light
-  siteUrl: 'https://tailwind-nextjs-starter-blog.vercel.app',
+  siteUrl: 'https://cloudnative-vn.vercel.app/',
   siteRepo: 'https://github.com/timlrx/tailwind-nextjs-starter-blog',
   siteLogo: `${process.env.BASE_PATH || ''}/static/images/logo.png`,
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,

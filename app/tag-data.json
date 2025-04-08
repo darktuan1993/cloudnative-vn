@@ -1,6 +1,9 @@
 {
   "kubernetes": 2,
-  "metrics-server": 2,
-  "giám-sát": 2,
-  "devops": 2
+  "metrics-server": 1,
+  "monitor": 1,
+  "devops": 2,
+  "storage-server": 1,
+  "ceph": 1,
+  "rook": 1
 }
