@@ -1,0 +1,84 @@
+---
+title: 'Giải pháp về storage Cloud Native CEPH'
+description: 'Hướng dẫn cài đặt và kiểm tra Metrics Server để theo dõi tài nguyên trong cụm Kubernetes'
+date: '2022-04-08'
+tags: ['Kubernetes', 'Storage Server', 'Ceph', 'DevOps', 'Rook']
+author: 'Bạch Đăng Tuấn'
+---
+
+# CEPH - The Future of Storage
+
+## Các loại Storage CEPH
+
+| **Loại Storage**              | **Cách lưu trữ**                                        | **Cách truy cập**                        | **Ứng dụng phổ biến**                                                                                                             |
+| ----------------------------- | ------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **CephFS (File System)**      | Lưu file dưới dạng object trong RADOS, metadata bởi MDS | Mount qua kernel hoặc FUSE (giống NFS)   | - Shared File System cho Kubernetes (RWX),Lưu trữ Home Directory, Big Data, AI/ML, HPC, Lưu trữ tài liệu, logs, hình ảnh          |
+| **RBD (Block Storage)**       | Lưu block device dưới dạng object trong RADOS           | Gắn như một ổ cứng (iSCSI, Kernel, QEMU) | - Lưu trữ ổ đĩa ảo cho VM (KVM, OpenStack, Proxmox),Persistent Volume cho Kubernetes (RWO), Database (MySQL, PostgreSQL, MongoDB) |
+| **RGW (Object Storage - S3)** | Lưu object dưới dạng key-value trong RADOS              | API S3, HTTP, REST                       | - Backup & Disaster Recovery, Lưu trữ Logs, AI/ML, Big Data, Static Website Hosting, Streaming Video & Media Storage              |
+
+## So sánh loại Storage CEPH
+
+| **Loại Storage**              | **File system trên OSD** | **Hiệu suất**                  | **Ưu điểm**                                                                                  | **Nhược điểm**                                           | **Khi nào nên dùng?**                                 |
+| ----------------------------- | ------------------------ | ------------------------------ | -------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------- |
+| **CephFS (File System)**      | XFS, Ext4                | Trung bình (phụ thuộc vào MDS) | - Hỗ trợ POSIX, Cho phép nhiều client truy cập cùng lúc, Tự phục hồi dữ liệu                 | - Hiệu suất phụ thuộc vào MDS, Không tối ưu cho file nhỏ | Khi cần một hệ thống file chia sẻ giữa nhiều máy chủ. |
+| **RBD (Block Storage)**       | XFS, Ext4                | Cao (nếu dùng SSD/NVMe)        | - Hiệu suất cao, phù hợp database, Tích hợp tốt với OpenStack/Kubernetes,Tự phục hồi dữ liệu | - Không chia sẻ giữa nhiều máy chủ cùng lúc (RWO)        | Khi cần block storage cho VM, Kubernetes, Database.   |
+| **RGW (Object Storage - S3)** | XFS, Ext4                | Tốt cho object lớn             | - Mở rộng vô hạn, Hỗ trợ S3 API, Chi phí thấp hơn so với CephFS/RBD                          | - Không thể chỉnh sửa object, Không hỗ trợ POSIX         | Khi cần lưu trữ dữ liệu lớn, backup, CDN, streaming.  |
+
+## Lựa chọn loại Storage Ceph phù hợp theo nhu cầu
+
+| Cần lưu trữ...                                           | Nên chọn...                 | Giải thích thêm                                                                                                                                     |
+| -------------------------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| File theo chuẩn POSIX, dùng chung giữa nhiều server      | **✅ CephFS**               | CephFS cung cấp hệ thống file chia sẻ tuân thủ POSIX, cho phép nhiều máy chủ mount và truy cập đồng thời.                                           |
+| Ổ cứng ảo cho VM, database, Kubernetes Persistent Volume | **✅ RBD (Block Storage)**  | RBD cung cấp các block device hiệu suất cao, phù hợp làm ổ đĩa ảo cho máy ảo, persistent volume cho Kubernetes và backend cho database.             |
+| Dữ liệu kiểu Amazon S3 (Backup, Logs, Streaming, AI/ML)  | **✅ RGW (Object Storage)** | RGW cung cấp giao diện tương thích S3, lý tưởng cho lưu trữ dữ liệu phi cấu trúc, backup, logs, streaming và dữ liệu cho AI/ML.                     |
+| Hiệu suất cao cho database, cần tốc độ đọc/ghi nhanh     | **✅ RBD với SSD/NVMe**     | Sử dụng RBD kết hợp với lớp lưu trữ SSD hoặc NVMe trên các OSD sẽ mang lại hiệu suất đọc/ghi cao, đáp ứng yêu cầu của database.                     |
+| Lưu trữ ảnh, video, logs với khả năng mở rộng vô hạn     | **✅ RGW**                  | RGW có khả năng mở rộng gần như vô hạn, phù hợp cho việc lưu trữ lượng lớn dữ liệu như ảnh, video và logs.                                          |
+| Hệ thống file lớn, cần chia sẻ nhiều user                | **✅ CephFS với nhiều MDS** | Để xử lý lượng lớn metadata và tăng khả năng đồng thời của nhiều user, việc triển khai CephFS với nhiều máy chủ MDS (Metadata Server) là cần thiết. |
+
+### Architecture ROOK
+
+![Ceph ROOK High-Level Architecture](/static/images/ceph-rook.png 'Ceph ROOK High-Level Architecture')
+
+Thành phần chính của Ceph ROOK như sau:
+
+<b>OSD (Object Storage Daemon)</b>: Đây là dịch vụ chịu trách nhiệm lưu trữ dữ liệu trên các node
+vật lý. Mỗi ổ đĩa trong cluster sẽ chạy một OSD daemon.
+
+<b>MON (Monitor Daemon)</b>: Duy trì trạng thái cluster, quản lý thông tin cấu hình, theo dõi trạng
+thái của các OSD.
+
+<b>MGR(Ceph Manager)</b>: Ceph Manager (MGR) là một daemon bổ sung trong Ceph, chịu trách nhiệm thu
+thập số liệu thống kê, cung cấp API quản lý, giám sát cluster và hỗ trợ các module mở rộng.
+
+<b>MDS (Metadata Server - Chỉ dùng cho CephFS) </b>: Xử lý metadata của hệ thống file, giúp tăng tốc
+truy vấn và quản lý cây thư mục.
+
+<b>RGW (RADOS Gateway) </b>: Cung cấp API tương thích với S3/Swift để truy cập object storage.
+
+<b>CSI (Container Storage Interface) </b>: Interface để kết nối giữa cluster vào hệ thống ceph.
+
+Rook Operator: Là một Kubernetes Operator giúp tự động triển khai và quản lý Ceph trên Kubernetes. Nó giúp đơn giản hóa việc cài đặt, cấu hình, mở rộng và bảo trì một Ceph cluster mà không cần can thiệp thủ công.
+
+### Chuẩn bị hệ thống
+
+- Tuning OS Ubuntu cho máy RKE2-Server
+
+### ROOK-CEPH
+
+🏗️ **Rook Ceph Operator vs. Rook Ceph Cluster**: Khác biệt & Cách Hoạt Động  
+Trong hệ thống Rook Ceph, có hai thành phần quan trọng khi triển khai bằng Helm Chart:
+
+| Thành phần             | Vai trò                                                          |
+| ---------------------- | ---------------------------------------------------------------- |
+| **Rook Ceph Operator** | Triển khai Ceph Operator để giám sát và quản lý cluster          |
+| **Rook Ceph Cluster**  | Tạo các Custom Resources (CRs) để Ceph Operator cấu hình cluster |
+
+### Rook Ceph Operator
+
+```bash
+helm repo add rook-release https://charts.rook.io/release
+helm repo update
+helm install rook-ceph rook-release/rook-ceph --namespace rook-ceph --create-namespace
+kubectl get pods -n rook-ceph
+
+```
