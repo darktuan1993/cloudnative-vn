@@ -1,9 +1,11 @@
 {
-  "kubernetes": 2,
+  "cloudnative": 3,
+  "storage": 4,
+  "ceph": 4,
+  "cubefs": 2,
+  "kubernetes": 3,
+  "devops": 3,
+  "rook": 1,
   "metrics-server": 1,
-  "monitor": 1,
-  "devops": 2,
-  "storage-server": 1,
-  "ceph": 1,
-  "rook": 1
+  "monitor": 1
 }
