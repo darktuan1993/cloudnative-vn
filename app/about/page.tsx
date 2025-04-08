@@ -9,7 +9,7 @@ export const metadata = genPageMetadata({ title: 'Giới Thiệu' })
 export default function Page() {
   const author = allAuthors.find((p) => p.slug === 'bachdangtuan') as Authors
   const mainContent = coreContent(author)
-  console.log(author)
+  // console.log(author)
 
   return (
     <>
