@@ -7,3 +7,82 @@ authors: ['bachdangtuan']
 ---
 
 # Cơ chế hoạt động của CephFS
+
+## CephFS là gì?
+
+**CephFS (Ceph File System)** là một hệ thống **lưu trữ file phân tán** hoạt động tương tự như:
+
+- Một **ổ đĩa mạng (shared drive)**, nơi nhiều máy tính hoặc ứng dụng có thể truy cập cùng lúc.
+- Nhưng khác ở chỗ: dữ liệu được **lưu trên nhiều ổ đĩa, nhiều máy chủ**, có khả năng **phân tán, sao lưu và tự phục hồi**.
+
+---
+
+## Cơ chế hoạt động CephFS (dễ hiểu cho người mới)
+
+### 1. Metadata Server (MDS) – Người quản lý file
+
+- Quản lý thông tin file như tên, đường dẫn, quyền truy cập, thời gian sửa đổi…
+- Khi bạn mở file, CephFS hỏi **MDS: “File này ở đâu?”**
+- MDS không lưu trữ dữ liệu thực tế mà chỉ lưu trữ thông tin về vị trí của các block dữ liệu.
+- MDS có thể xử lý nhiều yêu cầu cùng lúc, giúp tăng tốc độ truy cập file.
+
+Người dùng (Client A) mở file `/docs/report.pdf` được lưu trữ trong CephFS.
+
+#### Các bước 1 người dùng lấy dữ liệu:
+
+1. **Client A** yêu cầu mở file `report.pdf`.
+2. **MDS (Metadata Server)** kiểm tra:
+   - File có tồn tại không?
+   - Ai đang truy cập?
+   - File nằm ở đâu trên cluster?
+3. MDS trả về thông tin file, vị trí các block dữ liệu trong hệ thống.
+4. **Client A** kết nối trực tiếp tới các **OSD** để đọc dữ liệu (file có thể nằm ở nhiều OSD).
+5. File được tập hợp lại thành `report.pdf` và hiển thị cho người dùng.
+6. Nếu có lỗi (ví dụ 1 OSD hỏng), Ceph sẽ tự động lấy bản sao từ OSD khác mà người dùng không hề nhận ra sự cố.
+7. Nếu nhiều người cùng mở file, MDS sẽ chia tải cho các OSD khác nhau để tránh nghẽn.
+8. Nếu có thay đổi (thêm, sửa, xóa file), MDS sẽ cập nhật thông tin và thông báo cho các OSD.
+
+```
++------------+               +------------+
+|  Client A  |               |   Client B |
++------------+               +------------+
+       |                           |
+       |     Request: /docs/report.pdf
+       |-------------------------->|
+       |                           |
+       |         +---------------+
+       |         |     MDS       |  ← Metadata Server
+       |<--------|  Lookup file  |
+       |         +---------------+
+       |                |
+       |                v
+       |      "File is on OSD2, OSD5"
+       |                |
+       v                v
++------------+   +------------+   +------------+
+|   OSD 1    |   |   OSD 2    |   |   OSD 5    |  ← Chứa dữ liệu file
++------------+   +------------+   +------------+
+```
+
+### 2. OSD – Nơi lưu trữ dữ liệu thực tế
+
+- File được chia nhỏ thành nhiều block và lưu trên nhiều **OSD (Object Storage Daemon)** khác nhau.
+- Dữ liệu có thể phân tán trên nhiều ổ cứng vật lý.
+
+### 3. Tự động sao lưu (Replication)
+
+- Mỗi block dữ liệu sẽ có nhiều bản sao (thường là 3) nằm ở các OSD khác nhau.
+- Nếu một OSD hỏng → Ceph tự phục hồi từ các bản sao khác.
+
+### 4. Phân tải & sẵn sàng cao (High Availability)
+
+- Nếu nhiều người truy cập → Ceph dùng nhiều MDS để chia tải.
+- Ceph phân phối dữ liệu đều trên OSD để tránh nghẽn.
+
+### 5. Mở rộng tự động
+
+- Gắn thêm ổ cứng/node mới → Ceph tự động thêm vào hệ thống, không cần dừng hệ thống.
+
+---
+
+## 📊 Minh họa kiến trúc CephFS
