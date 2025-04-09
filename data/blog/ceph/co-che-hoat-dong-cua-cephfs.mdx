@@ -28,19 +28,19 @@ authors: ['bachdangtuan']
 
 Người dùng (Client A) mở file `/docs/report.pdf` được lưu trữ trong CephFS.
 
-#### Các bước 1 người dùng lấy dữ liệu:
+#### 📥 Các bước người dùng lấy dữ liệu:
 
-1. **Client A** yêu cầu mở file `report.pdf`.
-2. **MDS (Metadata Server)** kiểm tra:
-   - File có tồn tại không?
-   - Ai đang truy cập?
-   - File nằm ở đâu trên cluster?
-3. MDS trả về thông tin file, vị trí các block dữ liệu trong hệ thống.
-4. **Client A** kết nối trực tiếp tới các **OSD** để đọc dữ liệu (file có thể nằm ở nhiều OSD).
-5. File được tập hợp lại thành `report.pdf` và hiển thị cho người dùng.
-6. Nếu có lỗi (ví dụ 1 OSD hỏng), Ceph sẽ tự động lấy bản sao từ OSD khác mà người dùng không hề nhận ra sự cố.
-7. Nếu nhiều người cùng mở file, MDS sẽ chia tải cho các OSD khác nhau để tránh nghẽn.
-8. Nếu có thay đổi (thêm, sửa, xóa file), MDS sẽ cập nhật thông tin và thông báo cho các OSD.
+            1. **Client A** yêu cầu mở file `report.pdf`.
+            2. **MDS (Metadata Server)** kiểm tra:
+               - File có tồn tại không?
+               - Ai đang truy cập?
+               - File nằm ở đâu trên cluster?
+            3. MDS trả về thông tin file, vị trí các block dữ liệu trong hệ thống.
+            4. **Client A** kết nối trực tiếp tới các **OSD** để đọc dữ liệu (file có thể nằm ở nhiều OSD).
+            5. File được tập hợp lại thành `report.pdf` và hiển thị cho người dùng.
+            6. Nếu có lỗi (ví dụ 1 OSD hỏng), Ceph sẽ tự động lấy bản sao từ OSD khác mà người dùng không hề nhận ra sự cố.
+            7. Nếu nhiều người cùng mở file, MDS sẽ chia tải cho các OSD khác nhau để tránh nghẽn.
+            8. Nếu có thay đổi (thêm, sửa, xóa file), MDS sẽ cập nhật thông tin và thông báo cho các OSD.
 
 ```
 +------------+               +------------+
@@ -62,6 +62,63 @@ Người dùng (Client A) mở file `/docs/report.pdf` được lưu trữ trong
 +------------+   +------------+   +------------+
 |   OSD 1    |   |   OSD 2    |   |   OSD 5    |  ← Chứa dữ liệu file
 +------------+   +------------+   +------------+
+```
+
+---
+
+#### 📥 Các bước người upload và lưu dữ liệu:
+
+1. Client gửi request ghi file
+
+- Gửi request ghi /docs/report.pdf tới CephFS mountpoint.
+- Giao tiếp với MDS (Metadata Server) để:
+- Tạo entry metadata cho file mới.
+- Gán inode, quyền truy cập, đường dẫn.
+
+2. File được chia nhỏ thành các block
+
+- CephFS sử dụng cơ chế lưu dữ liệu của RADOS, nên file sẽ được:
+- Chia thành các chunk nhỏ (thường 4MB mỗi block – configurable)
+- Gán Object ID cho từng block.
+- Lưu trữ phân tán lên các OSD khác nhau.
+
+- Ví dụ: report.pdf (100 MB) → chia thành 25 block → mỗi block lưu trên 1 OSD, hoặc nhiều bản sao.
+
+3. Replication (tự sao lưu)
+
+- Mỗi block được replica (mặc định 3 bản) để đảm bảo an toàn dữ liệu.
+- Ví dụ:
+
+Block 1 → OSD1, OSD3, OSD5
+
+Block 2 → OSD2, OSD4, OSD6
+
+4. MDS cập nhật metadata
+   Lưu thông tin:
+   report.pdf gồm 25 block, các block nằm ở đâu, block nào thuộc OSD nào.
+
+5. Ghi hoàn tất
+   Sau khi dữ liệu và metadata đều được commit thành công → client nhận phản hồi “ghi thành công”.
+
+```
+[Client]
+   |
+   |----> Request ghi file /docs/report.pdf
+   |
+ [MDS] -- Gán inode, metadata
+   |
+   v
+Chia file PDF thành các block nhỏ (4MB, 8MB...)
+   |
+   v
++--------+  +--------+  +--------+
+| Block1 |  | Block2 |  | Block3 |  ...
++--------+  +--------+  +--------+
+   |           |           |
+   v           v           v
+[OSD1]     [OSD2]      [OSD3]     (và các bản sao ở OSD4,5,6...)
+
+
 ```
 
 ### 2. OSD – Nơi lưu trữ dữ liệu thực tế
