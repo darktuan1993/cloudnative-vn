@@ -10,7 +10,9 @@ summary: '[Thực chiến]-hướng dẫn triển khai cài đặt ceph trong m�
 # Setup CephFS trên môi trường thực tế
 Để triển khai cephFS trong môi trường thực tế thì chúng ta cần chuẩn bị như sau:
 ## 📑 Mục Lục
-1. [Chuẩn bị máy chủ](#chuan-bi-may-chu)
+1. [Chuẩn bị](#chuan-bi-may-chu)
+    - [Cấu hình máy chủ](#cau-hinh-may-chu)
+    - [Mô hình thiết kế](#mo-hinh-thiet-ke)
 2. [Tuning OS hệ thống](#tuning-os-he-thong)
 3. [Cài đặt hệ thống CephFS](#cai-dat-ceph)
 4. [Kịch bản mở rộng hệ thống](#mo-rong-he-thong)
@@ -18,7 +20,8 @@ summary: '[Thực chiến]-hướng dẫn triển khai cài đặt ceph trong m�
 ---
 
 
-<h2 id="chuan-bi-may-chu">🧰 Chuẩn bị máy chủ</h2>
+<h2 id="chuan-bi-may-chu">🧰 Chuẩn bị</h2>
+<h4 id="cau-hinh-may-chu">✨ Cấu hình máy chủ</h4>
 Triển khai trong môi trường thực tế thì chúng ta cần chuẩn bị các máy chủ với thông số như sau:
 | Môi trường   | Số lượng VM| Ghi chú mô hình |
 |-------------------------|----------------------|-----------------|
@@ -38,7 +41,105 @@ Triển khai trong môi trường thực tế thì chúng ta cần chuẩn bị 
 > Ubuntu 24.04 mới ra, cần kiểm chứng thêm trước khi dùng cho production.
 > Tùy thuộc vào số lượng OSD, MDS, MON, MGR mà chúng ta có thể điều chỉnh thông số RAM và CPU cho phù hợp với nhu cầu sử dụng của mình.
 
+<h4 id="mo-hinh-thiet-ke">✨ Mô hình thiết kế</h4>
+```
+                             +-------------+
+                             |   Client(s) |
+                             +-------------+
+                                    |
+                             Mount CephFS
+                                    |
+                     +----------------------------+
+                     |     Ceph Cluster Network   |
+                     +----------------------------+
+        +------------+------------+-------------+------------+-----------+
+        |            |            |             |            |           |
+     +--------+  +--------+   +--------+   +--------+   +--------+   +--------+
+     | node1  |  | node2  |   | node3  |   | node4  |   | node5  |   | node6  |
+     |--------|  |--------|   |--------|   |--------|   |--------|   |--------|
+     | MON    |  | MON    |   | MON    |   |        |   |        |   |        |
+     | MGR(A) |  | MGR(S) |   |        |   |        |   |        |   |        |
+     | MDS(A) |  | MDS(S) |   |        |   |        |   |        |   |        |
+     | OSD    |  | OSD    |   | OSD    |   | OSD    |   | OSD    |   | OSD    |
+     +--------+  +--------+   +--------+   +--------+   +--------+   +--------+
+
+
+```
+
 <h2 id="tuning-os-he-thong">🧰 Tuning OS hệ thống</h2>
+
+**Tuning file /etc/security/limits.conf**
+```
+soft nofile 1048576
+hard nofile 1048576
+soft nproc 1048576
+hard nproc 1048576
+```
+**Tuning file /etc/systemd/system.conf**
+```
+DefaultLimitNOFILE=1048576
+DefaultLimitNPROC=1048576
+```
+**Tắt swapoff**
+```
+swapoff -a
+sed -i '/ swap / s/^/#/' /etc/fstab
+
+```
+```
+sudo systemctl daemon-reexec
+
+```
+
+**Tinh file sysctl**
+```
+# ==========================================
+# Ceph Node OS Tuning - sysctl config
+# File: /etc/sysctl.d/90-ceph.conf
+# ==========================================
+
+# -----------------------------
+# 1. CPU Scheduler Optimization
+# -----------------------------
+kernel.sched_min_granularity_ns = 10000000         # Giảm độ trễ xử lý tác vụ nhỏ
+kernel.sched_wakeup_granularity_ns = 15000000      # Giới hạn mức độ "wakeup" để giảm context switch
+kernel.sched_migration_cost_ns = 500000            # Tăng chi phí migrate giữa CPU → giữ cache locality
+kernel.sched_autogroup_enabled = 0                 # Tắt tự nhóm tiến trình người dùng (không cần với Ceph)
+
+# -----------------------------
+# 2. Memory / RAM Optimization
+# -----------------------------
+vm.swappiness = 10                                  # Giảm tối đa việc sử dụng swap
+vm.dirty_ratio = 20                                 # Tối đa 20% RAM chứa dữ liệu chưa ghi xuống disk
+vm.dirty_background_ratio = 10                      # Bắt đầu flush khi đạt 10% RAM dirty
+vm.vfs_cache_pressure = 50                          # Giữ inode/dentry cache lâu hơn (tốt cho CephFS)
+vm.min_free_kbytes = 262144                         # Dự trữ RAM cho kernel khi memory thấp
+vm.zone_reclaim_mode = 0                            # Tắt reclaim NUMA zone không cần thiết
+
+# -----------------------------
+# 3. Disk I/O Optimization
+# -----------------------------
+fs.aio-max-nr = 1048576                             # Tăng số lượng async I/O tối đa toàn hệ thống
+fs.file-max = 2097152                               # Tăng số file descriptor system-wide (fd limit)
+
+# -----------------------------
+# 4. Network Stack Tuning
+# -----------------------------
+net.core.rmem_max = 268435456                       # Max buffer nhận (recv) cho socket
+net.core.wmem_max = 268435456                       # Max buffer gửi (send) cho socket
+net.ipv4.tcp_rmem = 4096 87380 268435456            # Min/default/max TCP recv buffer
+net.ipv4.tcp_wmem = 4096 65536 268435456            # Min/default/max TCP send buffer
+net.core.netdev_max_backlog = 5000                  # Số packet có thể xếp hàng chờ xử lý từ NIC
+net.ipv4.tcp_congestion_control = bbr               # Sử dụng thuật toán TCP BBR (hiệu năng cao)
+net.ipv4.tcp_mtu_probing = 1                        # Bật dò MTU để tránh fragmentation
+
+# -----------------------------
+# 5. System stability
+# -----------------------------
+kernel.panic = 10                                   # Sau 10s lỗi kernel → hệ thống sẽ reboot
+kernel.panic_on_oops = 1                            # Panic khi có lỗi nghiêm trọng (kernel oops)
+
+```
 
 <h2 id="cai-dat-ceph">🧰 Cài đặt hệ thống CephFS</h2>
 

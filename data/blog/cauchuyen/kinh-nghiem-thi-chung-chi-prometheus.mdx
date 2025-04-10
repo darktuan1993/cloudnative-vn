@@ -1,0 +1,126 @@
+---
+title: 'Hướng dẫn thi chứng chỉ Prometheus Certified Associate (PCA)'
+date: '2018-08-15'
+tags: ['certification', 'prometheus', 'pca']
+draft: false
+summary: Hành trình chinh phục chứng chỉ Prometheus không đơn thuần là việc học lý thuyết suông, Bài viết này sẽ chia sẻ quá trình tôi ôn luyện, chiến lược thi, và những mẹo nhỏ để bạn có thể tự tin vượt qua kỳ thi....
+---
+
+{/* # The Time Machine by H. G. Wells */}
+
+{/* _Title_: The Time Machine
+
+_Author_: H. G. Wells
+
+_Subject_: Science Fiction
+
+_Language_: English
+
+_Source_: [Project Gutenberg](https://www.gutenberg.org/ebooks/35) */}
+
+## Giới thiệu
+Prometheus Certified Associate (PCA), được quản lý bởi **Linux Foundation**, là một chứng chỉ quan trọng trong lĩnh vực giám sát và khả năng quan sát (observability). Bài viết này chia sẻ hành trình ôn luyện và thi đậu PCA của mình, từ cách học tới mẹo lúc làm bài.
+
+<img src="/static/images/prometheus-cert.png" style={{ display: 'inline', marginRight: '5px', marginBottom:0,marginTop:0 }} />
+
+## Đối tượng phù hợp
+
+Chứng chỉ này phù hợp với nhiều vị trí kỹ thuật:
+
+- **Sysadmin**: Quản trị hệ thống và hạ tầng
+- **DevOps Engineer**: Tham gia CI/CD, vận hành, giám sát
+- **Site Reliability Engineer (SRE)**: Đảm bảo uptime, reliability
+- **Developer**: Quan tâm tích hợp giám sát vào ứng dụng
+
+## Vì sao nên thi PCA?
+
+Prometheus ngày càng phổ biến trong các hệ thống cloud-native. Việc có chứng chỉ PCA:
+
+- Giúp bạn nắm vững toàn diện Prometheus
+- Được công nhận bởi Linux Foundation
+- Là bước đệm cho các chứng chỉ cao hơn và công việc tốt hơn
+
+## Cấu trúc nội dung kỳ thi PCA
+
+Kỳ thi gồm 60 câu hỏi trong 90 phút, với trọng số như sau:
+
+- **Khái niệm về Observability** – 18%
+- **Cơ bản về Prometheus** – 20%
+- **PromQL** – 28%
+- **Exporters & Instrumentation** – 16%
+- **Alerting & Dashboarding** – 18%
+
+## Những nội dung cần nắm chắc
+
+### 🔍 PromQL
+
+- Hiểu rõ cú pháp, các hàm `rate()`, `avg_over_time()`, `increase()`, v.v.
+- Làm bài tập thực tế trên [play.promlabs.com](https://play.promlabs.com)
+
+### 🚨 AlertManager
+
+- Hiểu cách Prometheus gửi alert
+- Biết cách định tuyến alert, cấu hình `group_by`, `receivers`
+
+### 🧩 Exporters
+
+- Làm quen với `node_exporter`, `blackbox_exporter`
+- Biết cấu hình scrape và labels
+
+### 🔧 Các khái niệm kỹ thuật quan trọng
+
+- **SLA / SLO / SLI**: Mức dịch vụ, mục tiêu và chỉ số đo
+- **Pull vs Push**: Prometheus là pull-based
+- **Tracing / Span**: Dành cho context OpenTelemetry
+- **Recording Rules & Alerting Rules**: Ghi nhớ sự khác biệt
+
+## 🎯 Trải nghiệm thực tế khi thi
+
+Kỳ thi PCA được tổ chức trực tuyến và **giám sát nghiêm ngặt** bởi hệ thống proctoring của Linux Foundation (thông qua PSI hoặc Examity tùy thời điểm). Trước khi bắt đầu, bạn cần lưu ý một số thủ tục và quy định sau:
+
+- **Quay video xung quanh phòng**: Trước khi được cấp quyền bắt đầu bài thi, bạn sẽ phải dùng webcam để quay toàn bộ không gian xung quanh – bàn làm việc, phía sau màn hình, trần nhà, gầm bàn. Nếu có bất kỳ sách, giấy tờ hay thiết bị nào bị nghi ngờ, bạn có thể bị từ chối thi.
+- **Không được dùng tai nghe**
+- **Cốc nước phải trong suốt và không dán nhãn** – đây là quy định bắt buộc. Đồ ăn nhẹ thì không nên để gần khu vực thi.
+- **Không được rời khỏi camera**, kể cả quay mặt sang bên hay nhìn ra ngoài quá lâu cũng có thể bị cảnh cáo hoặc loại khỏi bài thi.
+- **Xác minh danh tính**: Bạn sẽ cần cung cấp một giấy tờ tùy thân hợp lệ (CMND/CCCD/Hộ chiếu) có ảnh, rõ ràng.
+
+---
+
+### Cảm nhận khi thi
+
+- **Đề thi không dễ!** Tôi đánh dấu lại khoảng **25 câu để xem lại**, trong đó có khoảng **10 câu thực sự gây rối** vì các đáp án gần giống nhau đến mức chỉ một từ sai cũng khiến bạn chọn nhầm.
+- Một số câu hỏi yêu cầu đọc kỹ cấu hình YAML, biểu thức PromQL hoặc hành vi thực tế của alert routing.
+- **Thời gian thi là 90 phút**, nhưng nếu ôn kỹ thì có thể hoàn thành trong **60–70 phút** và có thời gian kiểm tra lại.
+- Có những câu cần kiến thức thực tế, ví dụ như **biết được `recording rule` khác `alerting rule` ra sao**, hoặc **khi nào cần dùng Pushgateway**.
+
+---
+
+✅ **Lời khuyên**: Trước ngày thi, hãy **test trước môi trường thi**, đảm bảo mạng ổn định, webcam rõ, và không gian thi sạch sẽ, yên tĩnh. Việc chuẩn bị kỹ lưỡng giúp bạn bước vào bài thi với tinh thần thoải mái và tự tin hơn rất nhiều.
+
+
+## Tài nguyên ôn tập
+
+### 📚 Tài nguyên miễn phí
+
+Bạn có thể khám phá và tìm hiểu về Chứng chỉ PCA và các chủ đề liên quan một cách tự do thông qua các kho lưu trữ GitHub sau:
+
+- [walidshaari/prometheus-certified-associate](https://github.com/walidshaari/prometheus-certified-associate)
+- [edgarpf/prometheus-certified-associate](https://github.com/edgarpf/prometheus-certified-associate)
+- [Al-HusseinHameedJasim/prometheus-certified-associate](https://github.com/Al-HusseinHameedJasim/prometheus-certified-associate)
+
+Ngoài ra bạn có thể luyện tập trực tiếp trên:
+
+- PromLabs playground: [https://play.promlabs.com](https://play.promlabs.com)
+- Prometheus chính thức: [https://prometheus.io/docs/](https://prometheus.io/docs/)
+
+### 💰 Tài nguyên trả phí
+
+Để có lộ trình học bài bản và có cấu trúc, bạn có thể cân nhắc các khóa học sau:
+
+- **Khóa học PCA trên KodeKloud**: Cung cấp cả video hướng dẫn, lab thực hành và đề thi thử.
+- **Udemy - Prometheus Certified Associate**: Dễ tiếp cận, phù hợp người mới, có phần thực hành và tổng ôn.
+
+---
+
+Hy vọng danh sách tài nguyên này giúp bạn dễ dàng lựa chọn cách học phù hợp với thời gian và ngân sách cá nhân!
+
