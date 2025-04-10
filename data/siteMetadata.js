@@ -1,6 +1,6 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
-  title: 'Blog Cloud Native Việt Nam',
+  title: 'Blog về công nghệ Cloud Native',
   author: 'Bạch Đăng Tuấn',
   headerTitle: 'CloudNative-VN',
   description:
