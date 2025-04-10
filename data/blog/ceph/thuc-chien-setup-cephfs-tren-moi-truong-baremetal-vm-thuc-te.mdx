@@ -19,16 +19,29 @@ summary: '[Thực chiến]-hướng dẫn triển khai cài đặt ceph trong m�
 
 
 <h2 id="chuan-bi-may-chu">🧰 Chuẩn bị máy chủ</h2>
+Triển khai trong môi trường thực tế thì chúng ta cần chuẩn bị các máy chủ với thông số như sau:
+| Môi trường   | Số lượng VM| Ghi chú mô hình |
+|-------------------------|----------------------|-----------------|
+| Lab/Test/Dev (demo)      | 3-4 VM               | Gộp MON, MGR, MDS và OSD trên cùng node |
+| UAT/Staging          | 5-6 VM            | Tách vai trò, có standby MDS |
+| Production nhỏ     | 6-8 VM           | HA đầy đủ, MON quorum, MGR standby, MDS active/standby, OSD tách biệt |
+| Production lớn | 9-15+ VM             | Mỗi vai trò chạy node riêng, OSD nhiều disk, scale CephFS |
 
 
+|Môi trường    | Ubuntu LTS phiên bản | Kernel tối thiểu | RAM mỗi node | CPU mỗi node |
+|-------------------------|----------------------|------------------|--------------|---------------|
+| 🧪 Lab / Test            | 20.04 hoặc 22.04     | ≥ 5.4            | 4 GB         | 2 vCPU        |
+| 🛠️ Dev / Staging         | ✅ 22.04 LTS          | ≥ 5.15           | 6–8 GB       | 2–4 vCPU      |
+| 🚀 Production nhỏ gọn     | ✅ 22.04 LTS          | ≥ 5.15           | 8–16 GB      | 4 vCPU        |
+| 🏢 Production quy mô lớn | ✅ 22.04 hoặc 24.04*   | ≥ 5.15           | 16–64 GB     | 8+ vCPU       |
 
+> Ubuntu 24.04 mới ra, cần kiểm chứng thêm trước khi dùng cho production.
+> Tùy thuộc vào số lượng OSD, MDS, MON, MGR mà chúng ta có thể điều chỉnh thông số RAM và CPU cho phù hợp với nhu cầu sử dụng của mình.
 
 <h2 id="tuning-os-he-thong">🧰 Tuning OS hệ thống</h2>
-
 
 <h2 id="cai-dat-ceph">🧰 Cài đặt hệ thống CephFS</h2>
 
 <h2 id="mo-rong-he-thong">🧰 Kịch bản mở rộng hệ thống</h2>
-
 
 <h2 id="xu-ly-su-co">🧰 Kịch bản xử lý sự cố hệ thống</h2>
