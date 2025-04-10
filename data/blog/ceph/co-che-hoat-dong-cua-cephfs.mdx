@@ -106,7 +106,7 @@ Người dùng (Client A) mở file `/docs/report.pdf` được lưu trữ trong
           |    MDS     |    ← Metadata Server: Tra cứu file
           +------------+
                |
-               | 3. Trả về vị trí block của file `report.pdf`
+               | 3. Trả về vị trí block của file report.pdf
                v
     +-----------+   +-----------+   +-----------+
     |   OSD 1   |   |   OSD 2   |   |   OSD 3   |   ← Object Storage Daemon: chứa dữ liệu thật
@@ -118,7 +118,7 @@ Người dùng (Client A) mở file `/docs/report.pdf` được lưu trữ trong
 🧠 Điều quan trọng:
 - Mỗi block của file là một object trong RADOS, được lưu độc lập
 - MDS chỉ trả về metadata (mapping), còn việc gom block lại thành file là nhiệm vụ của client-side CephFS kernel hoặc librados client
-- File không được "gom lại thành 1 khối" trên OSD – mà vẫn phân mảnh ra nhiều object rải rác
+- File không được "gom lại thành 1 khối" trên OSD - mà vẫn phân mảnh ra nhiều object rải rác
 
 ---
 
