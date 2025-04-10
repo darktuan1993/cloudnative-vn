@@ -17,60 +17,24 @@ authors: ['bachdangtuan']
 
 ---
 
-## Cơ chế hoạt động CephFS (dễ hiểu cho người mới)
+## Cách thức hoạt động CephFS
 
-### 1. Metadata Server (MDS) – Người quản lý file
-
-- Quản lý thông tin file như tên, đường dẫn, quyền truy cập, thời gian sửa đổi…
-- Khi bạn mở file, CephFS hỏi **MDS: “File này ở đâu?”**
-- MDS không lưu trữ dữ liệu thực tế mà chỉ lưu trữ thông tin về vị trí của các block dữ liệu.
-- MDS có thể xử lý nhiều yêu cầu cùng lúc, giúp tăng tốc độ truy cập file.
-
-Người dùng (Client A) mở file `/docs/report.pdf` được lưu trữ trong CephFS.
-
-#### 📥 Các bước người dùng lấy dữ liệu:
-
-            1. **Client A** yêu cầu mở file `report.pdf`.
-            2. **MDS (Metadata Server)** kiểm tra:
-               - File có tồn tại không?
-               - Ai đang truy cập?
-               - File nằm ở đâu trên cluster?
-            3. MDS trả về thông tin file, vị trí các block dữ liệu trong hệ thống.
-            4. **Client A** kết nối trực tiếp tới các **OSD** để đọc dữ liệu (file có thể nằm ở nhiều OSD).
-            5. File được tập hợp lại thành `report.pdf` và hiển thị cho người dùng.
-            6. Nếu có lỗi (ví dụ 1 OSD hỏng), Ceph sẽ tự động lấy bản sao từ OSD khác mà người dùng không hề nhận ra sự cố.
-            7. Nếu nhiều người cùng mở file, MDS sẽ chia tải cho các OSD khác nhau để tránh nghẽn.
-            8. Nếu có thay đổi (thêm, sửa, xóa file), MDS sẽ cập nhật thông tin và thông báo cho các OSD.
-
-```
-+------------+               +------------+
-|  Client A  |               |   Client B |
-+------------+               +------------+
-       |                           |
-       |     Request: /docs/report.pdf
-       |-------------------------->|
-       |                           |
-       |         +---------------+
-       |         |     MDS       |  ← Metadata Server
-       |<--------|  Lookup file  |
-       |         +---------------+
-       |                |
-       |                v
-       |      "File is on OSD2, OSD5"
-       |                |
-       v                v
-+------------+   +------------+   +------------+
-|   OSD 1    |   |   OSD 2    |   |   OSD 5    |  ← Chứa dữ liệu file
-+------------+   +------------+   +------------+
-```
-
----
+Người dùng (Client A) lưu file /docs/report.pdf vào trong CephFS.
 
 #### 📥 Các bước người upload và lưu dữ liệu:
 
-1. Client gửi request ghi file
+1. Client mount CephFS → liên hệ MON để biết thông tin cluster.
+2. MON trả về danh sách các thành phần đang active, bao gồm MDS.
+3. Client gửi yêu cầu tạo file mới tới MDS.
+4. MDS tạo entry metadata cho file mới, gán inode, quyền truy cập, đường dẫn.
+5. File được chia thành các block nhỏ (thường 4MB mỗi block).
+6. Mỗi block được gán Object ID và lưu trữ phân tán lên các OSD khác nhau.
+7. Mỗi block được replica (mặc định 3 bản) để đảm bảo an toàn dữ liệu.
+8. MDS cập nhật metadata, lưu thông tin về các block và vị trí của chúng.
+9. Sau khi dữ liệu và metadata đều được commit thành công, client nhận phản hồi “ghi thành công”.
 
-- Gửi request ghi /docs/report.pdf tới CephFS mountpoint.
+{/\* - Gửi request ghi /docs/report.pdf tới CephFS mountpoint.
+
 - Giao tiếp với MDS (Metadata Server) để:
 - Tạo entry metadata cho file mới.
 - Gán inode, quyền truy cập, đường dẫn.
@@ -98,50 +62,306 @@ Block 2 → OSD2, OSD4, OSD6
    report.pdf gồm 25 block, các block nằm ở đâu, block nào thuộc OSD nào.
 
 5. Ghi hoàn tất
-   Sau khi dữ liệu và metadata đều được commit thành công → client nhận phản hồi “ghi thành công”.
+   Sau khi dữ liệu và metadata đều được commit thành công → client nhận phản hồi “ghi thành công”. \*/}
 
 ```
-[Client]
-   |
-   |----> Request ghi file /docs/report.pdf
-   |
- [MDS] -- Gán inode, metadata
-   |
-   v
-Chia file PDF thành các block nhỏ (4MB, 8MB...)
-   |
-   v
-+--------+  +--------+  +--------+
-| Block1 |  | Block2 |  | Block3 |  ...
-+--------+  +--------+  +--------+
-   |           |           |
-   v           v           v
-[OSD1]     [OSD2]      [OSD3]     (và các bản sao ở OSD4,5,6...)
+                     [1] Client A mount CephFS → hỏi MON
+                                 |
+                                 v
+                            +--------+
+                            |  MON   |  ← Monitor: Quản lý cluster map, quorum
+                            +--------+
+                                 |
+                     [2] Trả về MDS đang active
+                                 |
+                                 v
+                            +--------+
+                            |  MDS   |  ← Metadata Server: Quản lý inode, quyền, đường dẫn
+                            +--------+
+                                 |
+         [3] Gửi yêu cầu tạo file /docs/report.pdf (metadata)
+                                 |
+         [4] Chia nhỏ file thành các block (VD: 4MB mỗi block)
+                                 |
+                                 v
+      +-----------+    +-----------+    +-----------+
+      |   OSD 1   |    |   OSD 2   |    |   OSD 3   |   ← Lưu block dữ liệu thực tế
+      +-----------+    +-----------+    +-----------+
+           |                |                |
+           |<---- Replication copies ------->|  ← Tự động sao lưu block (replica)
 
+                              ↑
+                              |
+                       +-------------+
+                       |     MGR     |  ← Manager: Theo dõi MON, MDS, OSD, plugin, alerts
+                       +-------------+
+```
+
+Người dùng (Client A) mở file `/docs/report.pdf` được lưu trữ trong CephFS.
+
+#### 📥 Các bước người dùng lấy dữ liệu:
+
+            1. **Client A** yêu cầu mở file `report.pdf`.
+            2. Client liên hệ MON để lấy thông tin về cluster + MDS hiện tại.
+            3. MON trả về danh sách MDS (đặc biệt là MDS đang active).
+            4. Client gửi yêu cầu tới MDS để lấy thông tin về file.
+            5. MDS trả về thông tin về file: `report.pdf` nằm ở đâu, trên OSD nào.
+            6. Client nhận thông tin → kết nối trực tiếp tới các OSD chứa dữ liệu thật.
+            7. Client gửi yêu cầu tới OSD để lấy dữ liệu.
+            8. OSD trả về dữ liệu cho Client.
+            9. Nếu 1 OSD bị lỗi, Ceph tự dùng bản sao từ OSD khác (replica).
+            10.Nếu có nhiều client, MDS + MON phân phối tải hợp lý.
+
+```
+          +------------+
+          |  Client A  |
+          +------------+
+               |
+               | 1. Gửi yêu cầu mount CephFS
+               v
+          +------------+
+          |    MON     |    ← Monitor: Quản lý trạng thái cluster
+          +------------+
+               |
+               | 2. Trả về thông tin MDS
+               v
+          +------------+
+          |    MDS     |    ← Metadata Server: Tra cứu file
+          +------------+
+               |
+               | 3. Trả về vị trí block của file `report.pdf`
+               v
+    +-----------+   +-----------+   +-----------+
+    |   OSD 1   |   |   OSD 2   |   |   OSD 3   |   ← Object Storage Daemon: chứa dữ liệu thật
+    +-----------+   +-----------+   +-----------+
+               |         |               |
+               +-------> Client đọc dữ liệu trực tiếp
+
+```
+
+🧠 Điều quan trọng:
+
+- Mỗi block của file là một object trong RADOS, được lưu độc lập
+- MDS chỉ trả về metadata (mapping), còn việc gom block lại thành file là nhiệm vụ của client-side CephFS kernel hoặc librados client
+- File không được "gom lại thành 1 khối" trên OSD – mà vẫn phân mảnh ra nhiều object rải rác
+
+---
+
+## Cơ chế quan trọng
+
+### 1. Lưu trữ dữ liệu thực tế
+
+{/\* - File được chia nhỏ thành nhiều block và lưu trên nhiều **OSD (Object Storage Daemon)** khác nhau.
+
+- Dữ liệu có thể phân tán trên nhiều ổ cứng vật lý. \*/}
+- OSD là thành phần trong Ceph dùng để lưu trữ dữ liệu thật sự - tức là nơi file của bạn “sống” thật.
+- Là một dịch vụ chạy trên máy chủ (daemon).
+- Gắn liền với một ổ đĩa vật lý hoặc partition.
+- Một node có thể chạy nhiều OSD, mỗi OSD cho một ổ đĩa khác nhau.
+- 🔧 Ví dụ: Nếu 1 máy có 4 ổ cứng → có thể chạy 4 OSD.
+
+📦 Ví dụ dễ hiểu:
+File report.pdf có dung lượng 12MB. Ceph chia file này thành 3 block (mỗi block 4MB).
+
+- Block 1 → lưu ở OSD1
+- Block 2 → lưu ở OSD2
+- Block 3 → lưu ở OSD3
+- Mỗi block sẽ được sao lưu (replica) sang 2 OSD khác nữa.
+- Tổng cộng: 3 block × 3 replica = 9 bản nhỏ được lưu rải rác.
+
+```
+             +----------------------+
+             |   File: report.pdf   |  (12 MB)
+             +----------------------+
+                        |
+                        |  Chia thành 3 block (4 MB mỗi block)
+                        v
+        +----------+    +----------+    +----------+
+        | Block 1  |    | Block 2  |    | Block 3  |
+        +----------+    +----------+    +----------+
+             |               |               |
+             |               |               |
+             v               v               v
+      +------------+   +------------+   +------------+
+      |   OSD 1    |   |   OSD 2    |   |   OSD 3    |
+      +------------+   +------------+   +------------+
+             |               |               |
+     (Replica 1 & 2)  (Replica 1 & 2)  (Replica 1 & 2)
+             |               |               |
+             v               v               v
+      +------------+   +------------+   +------------+
+      |   OSD 4    |   |   OSD 5    |   |   OSD 6    |
+      +------------+   +------------+   +------------+
+```
+
+### 2. Tự động sao lưu (Replication)
+
+Ceph sử dụng thuật toán CRUSH và cơ chế primary OSD replication để thực hiện tự động sao lưu dữ liệu giữa các OSD.
+Nó không dùng rsync, không dùng snapshot, không copy từng file, mà làm ở tầng object (block), hoàn toàn phân tán và theo quy tắc đồng bộ hóa đồng thuận.
+
+```
+                         +------------+
+                         |  Client    |
+                         +------------+
+                               |
+                               | 1️⃣ Gửi block dữ liệu (VD: Block 42)
+                               v
+                       +------------------+
+                       |   Primary OSD     |  ← OSD1 (được CRUSH chọn là chính)
+                       +------------------+
+                         |          |
+            2️⃣ Gửi replica     2️⃣ Gửi replica
+                         |          |
+                         v          v
+                +-------------+   +-------------+
+                |  Replica OSD |   |  Replica OSD |
+                |   (OSD2)     |   |   (OSD3)     |
+                +-------------+   +-------------+
+
+                         ^           ^
+                         |           |
+       3️⃣ Gửi xác nhận ----       ---- 3️⃣ Gửi xác nhận
+                         \         /
+                          \       /
+                       +------------------+
+                       |  Primary OSD      |
+                       | (nhận đủ ACK)     |
+                       +------------------+
+                               |
+         4️⃣ Báo "Ghi thành công" cho client
+                               v
+                         +------------+
+                         |  Client    |
+                         +------------+
+```
+
+1. CRUSH chọn OSDs: Khi cần ghi 1 block, Ceph dùng thuật toán CRUSH để tính ra danh sách các OSD sẽ lưu:
+
+- Ví dụ: OSD1 (chính), OSD2 (replica 1), OSD3 (replica 2)
+
+2. Primary OSD nhận ghi: Client gửi block đến Primary OSD (OSD1).
+
+- OSD1 sẽ gửi block đó đồng thời đến các OSD khác (OSD2, OSD3).
+
+3. Cơ chế đồng bộ kiểu “Write-Ack”: OSD1 chờ phản hồi từ OSD2, OSD3 → khi đủ số lượng replica phản hồi thành công → mới báo cho client là “ghi hoàn tất”.
+
+- Đây gọi là quorum-style acknowledgment.
+
+4. Consistency đảm bảo ở mức object: Từng block được đồng bộ riêng biệt, không cần nhất quán toàn hệ thống như database.
+
+### 3. Phân tải & sẵn sàng cao (High Availability)
+
+👉 Dưới đây là mô hình kiến trúc riêng của CephFS, thể hiện rõ:
+
+- Cách hoạt động của HA & phân tải
+- Vai trò của từng thành phần: Client, MON, MGR, MDS, OSD
+- Không có điểm lỗi đơn lẻ (No SPOF)
+
+```
+                                   +------------------+
+                                   |    Client A      | ← App / User / Pod
+                                   +------------------+
+                                           |
+                               Mount CephFS qua kernel/FUSE
+                                           |
+                   +-----------------------+-----------------------+
+                   |                       |                       |
+                   v                       v                       v
+             +-----------+         +-----------+         +-----------+
+             |   MON 1   |         |   MON 2   |         |   MON 3   | ← Quorum MON: ≥2/3
+             +-----------+         +-----------+         +-----------+
+                   |                     |                     |
+                   +----------------+-------------------------+
+                                    |
+                        +------------------------+
+                        |     MGR Active / HA     | ← Theo dõi MON, MDS, OSD, health
+                        +------------------------+
+
+                                    ↓
+                +-------------------------------------------+
+                |         CephFS Metadata Servers           |
+                |    (MDS Active + MDS Standby nodes)       |
+                +-------------------------------------------+
+                  |                        |
+           +---------------+     +------------------+
+           |   MDS Active  |     |   MDS Standby    | ← Auto failover nếu Active chết
+           +---------------+     +------------------+
+                  |
+        [Metadata: file path, inode, quyền, mapping]
+                  |
+                  v
+   +----------------+   +----------------+   +----------------+
+   |     OSD 1      |   |     OSD 2      |   |     OSD 3      | ← Dữ liệu file (block)
+   +----------------+   +----------------+   +----------------+
+         |  |                   |  |                  |  |
+         |  +--- Replica 1 ---> |  +--- Replica 2 --->| ...
+         |                      |                     |
+         |<----- Load Balancing + Recovery ---------->|
+
+```
+
+#### 🧩 Diễn giải cơ chế High Availability trong CephFS
+
+```
+
+| Thành phần | Cơ chế HA |
+|------------|-----------|
+| **MON**    | Tối thiểu 3 MON để đạt quorum (2/3) |
+| **MDS**    | Hỗ trợ Active/Standby hoặc Active/Active MDS |
+| **OSD**    | Dữ liệu được chia block + replica trên nhiều OSD |
+| **Client** | Tự động reconnect sang MDS khác khi fail |
+| **MGR**    | Giám sát toàn cluster, kích hoạt cảnh báo, plugin |
+
+```
+
+#### 🔄 Cơ chế Load Balancing trong CephFS
+
+| Tầng              | Cơ chế                                                             |
+| ----------------- | ------------------------------------------------------------------ |
+| **Client → MDS**  | Client được phân vào các MDS theo subtree, nếu có nhiều MDS Active |
+| **Dữ liệu → OSD** | CRUSH tự động phân phối block đều lên OSD theo trọng số            |
+| **Dòng truy cập** | Tránh “nóng” 1 OSD nhờ CRUSH và pool tuning                        |
+
+#### ⚠️ Khi có sự cố – CephFS xử lý thế nào?
+
+| Tình huống          | CephFS xử lý                                                |
+| ------------------- | ----------------------------------------------------------- |
+| **MDS Active chết** | Standby tự động takeover                                    |
+| **MON chết**        | Miễn còn quorum, client vẫn mount được                      |
+| **OSD chết**        | Ceph tự sử dụng bản replica khác để phục vụ                 |
+| **Node mất điện**   | Ceph tự rebalancing + backfill dữ liệu sau khi node trở lại |
+
+### 4. Mở rộng tự động
+
+Gắn thêm ổ cứng/node mới → Ceph tự động thêm vào hệ thống, không cần dừng hệ thống.
+CephFS có khả năng mở rộng tự động và gần như không giới hạn, nhờ vào:
+
+- 📂 Mở rộng metadata layer (MDS)
+- 💾 Mở rộng storage layer (OSD)
+- 📈 Tự động phân phối tải client / dữ liệu / metadata
+
+```
+                +-----------------+      +-----------------+
+                |    MDS 1        |      |    MDS 2        | ← Active/Active MDS
+                +-----------------+      +-----------------+
+                         |                       |
+                         | Metadata Subtree A    | Metadata Subtree B
+                         v                       v
+                +-------------+          +-------------+
+                |   OSD 1     |   ...    |   OSD n     | ← Storage mở rộng không giới hạn
+                +-------------+          +-------------+
+
+                       ↑
+              Ceph tự động rebalancing
+              khi thêm OSD / tăng tải
+
+                    ↕
+        Client tự gán vào MDS / OSD phù hợp
 
 ```
 
 ---
 
-### 2. OSD – Nơi lưu trữ dữ liệu thực tế
+## Kết luận
 
-- File được chia nhỏ thành nhiều block và lưu trên nhiều **OSD (Object Storage Daemon)** khác nhau.
-- Dữ liệu có thể phân tán trên nhiều ổ cứng vật lý.
-
-### 3. Tự động sao lưu (Replication)
-
-- Mỗi block dữ liệu sẽ có nhiều bản sao (thường là 3) nằm ở các OSD khác nhau.
-- Nếu một OSD hỏng → Ceph tự phục hồi từ các bản sao khác.
-
-### 4. Phân tải & sẵn sàng cao (High Availability)
-
-- Nếu nhiều người truy cập → Ceph dùng nhiều MDS để chia tải.
-- Ceph phân phối dữ liệu đều trên OSD để tránh nghẽn.
-
-### 5. Mở rộng tự động
-
-- Gắn thêm ổ cứng/node mới → Ceph tự động thêm vào hệ thống, không cần dừng hệ thống.
-
----
-
-## 📊 Minh họa kiến trúc CephFS
+CephFS là một hệ thống tệp phân tán mạnh mẽ, linh hoạt và tự động phục hồi. Nó cho phép nhiều người dùng truy cập và chia sẻ dữ liệu một cách dễ dàng, đồng thời đảm bảo an toàn và khả năng mở rộng cao. CephFS là lựa chọn lý tưởng cho các ứng dụng yêu cầu lưu trữ file lớn và phân tán.
