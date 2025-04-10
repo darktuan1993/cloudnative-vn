@@ -14,7 +14,7 @@ const siteMetadata = {
   socialBanner: `${process.env.BASE_PATH || ''}/static/images/twitter-card.png`,
   // mastodon: 'https://mastodon.social/@mastodonuser',
   email: 'address@yoursite.com',
-  github: 'https://github.com',
+  github: 'https://github.com/',
   x: 'https://twitter.com/x',
   facebook: 'https://facebook.com',
   youtube: 'https://youtube.com',
