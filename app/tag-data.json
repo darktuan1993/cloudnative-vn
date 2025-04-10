@@ -5,7 +5,7 @@
   "cubefs": 2,
   "kubernetes": 3,
   "devops": 3,
-  "rook": 1,
   "metrics-server": 1,
-  "monitor": 1
+  "monitor": 1,
+  "rook": 1
 }
