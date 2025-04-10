@@ -10,8 +10,10 @@ const siteMetadata = {
   theme: 'dark', // system, dark or light
   siteUrl: 'https://cloudnative-vn.com',
   siteRepo: 'https://github.com',
-  siteLogo: `${process.env.BASE_PATH || 'https://cloudnative-vn.com'}/static/images/logo.png`,
-  socialBanner: `${process.env.BASE_PATH || 'https://cloudnative-vn.com'}/static/images/twitter-card.png`,
+  // siteLogo: `${process.env.BASE_PATH || 'https://cloudnative-vn.com'}/static/images/logo.png`,
+  // socialBanner: `${process.env.BASE_PATH || 'https://cloudnative-vn.com'}/static/images/twitter-card.png`,
+  siteLogo: `https://cloudnative-vn.com/static/images/logo.png`,
+  socialBanner: `https://cloudnative-vn.com/static/images/twitter-card.png`,
   // mastodon: 'https://mastodon.social/@mastodonuser',
   email: 'address@yoursite.com',
   github: 'https://github.com',
