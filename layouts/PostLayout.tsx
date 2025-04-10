@@ -32,7 +32,7 @@ interface LayoutProps {
 export default function PostLayout({ content, authorDetails, next, prev, children }: LayoutProps) {
   const { filePath, path, slug, date, title, tags } = content
   const basePath = path.split('/')[0]
-  console.log(content.structuredData)
+  console.log(authorDetails)
 
   return (
     <SectionContainer>
@@ -75,6 +75,23 @@ export default function PostLayout({ content, authorDetails, next, prev, childre
                       <dl className="text-sm leading-5 font-medium whitespace-nowrap">
                         <dt className="sr-only">Name</dt>
                         <dd className="text-gray-900 dark:text-gray-100">{author.name}</dd>
+                        <dt className="sr-only">Infor</dt>
+                        <dd>
+                          {author.occupation}
+                        </dd>
+                        <dd>
+                          {/* 0934010704 (zalo/imess) */}
+                          {author.twitter && (
+                            <Link
+                              href={author.twitter}
+                              className="flex items-center gap-1 text-primary-500 hover:text-primary-600 dark:hover:text-primary-400"
+                              aria-label="Zalo profile"
+                            >
+                              {/* <MessageCircle className="w-4 h-4" /> */}
+                              <span>Zalo: 0934.01.07.04</span>
+                            </Link>
+                          )}
+                        </dd>
                         {/* <dt className="sr-only">Twitter</dt>
                         <dd>
                           {author.twitter && (

@@ -16,6 +16,7 @@ const siteMetadata = {
   email: 'address@yoursite.com',
   github: 'https://github.com',
   x: 'https://twitter.com/x',
+  zalo: 'https://zalo.me/0934010704',
   facebook: 'https://facebook.com',
   youtube: 'https://youtube.com',
   linkedin: 'https://www.linkedin.com',

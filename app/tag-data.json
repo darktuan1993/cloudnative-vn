@@ -8,5 +8,8 @@
   "metrics-server": 1,
   "monitor": 1,
   "rook": 1,
-  "cephfs": 2
+  "cephfs": 2,
+  "certification": 1,
+  "prometheus": 1,
+  "pca": 1
 }
