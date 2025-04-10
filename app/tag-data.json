@@ -1,14 +1,14 @@
 {
   "cloudnative": 3,
-  "cubefs": 2,
   "storage": 4,
+  "cephfs": 2,
+  "cubefs": 2,
   "ceph": 2,
   "kubernetes": 3,
   "devops": 3,
   "metrics-server": 1,
   "monitor": 1,
   "rook": 1,
-  "cephfs": 2,
   "certification": 1,
   "prometheus": 1,
   "pca": 1
