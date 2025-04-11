@@ -1,0 +1,146 @@
+---
+title: 'Kinh nghiệm thi chứng chỉ Kubernetes Security (Certified Kubernetes Security Specialist)'
+date: '2025-04-10'
+tags: ['certification', 'kubernetes', 'cks', 'cloudnative', 'security']
+draft: false
+summary: Chứng chỉ CKS là đỉnh cao cho những ai theo đuổi bảo mật hệ thống Kubernetes. Bài viết này chia sẻ toàn bộ hành trình ôn luyện, mẹo thi và trải nghiệm thực tế để bạn có thể tự tin chinh phục kỳ thi này.
+---
+
+## Giới thiệu
+
+**Certified Kubernetes Security Specialist (CKS)** là chứng chỉ được cấp bởi CNCF (Cloud Native Computing Foundation), dành cho những ai đã nắm vững nền tảng Kubernetes và muốn chuyên sâu vào khía cạnh bảo mật. kỳ thi Certified Kubernetes Security Specialist (CKS) đã được cập nhật đáng kể kể từ ngày 15 tháng 10 năm 2024. Những thay đổi này nhằm đảm bảo rằng các chuyên gia được chứng nhận có kiến thức và kỹ năng phù hợp với các thực tiễn bảo mật mới nhất trong môi trường Kubernetes và container.
+
+Trong bài viết này, mình sẽ chia sẻ hành trình học và thi chứng chỉ CKS – từ kiến thức cần nắm, tài nguyên ôn luyện cho đến trải nghiệm thi thực tế.
+
+<img
+  src="/static/images/cks-cert.png"
+  alt="ky-thi-cks-la-ky-thi-kho-nhat-toi-tung-thi"
+  style={{ display: 'inline', marginRight: '5px', marginBottom: 0, marginTop: 0 }}
+  loading="lazy"
+/>
+## Ai nên thi CKS?
+
+CKS phù hợp với những vai trò như:
+
+- **DevSecOps Engineer**: Triển khai bảo mật từ CI/CD tới runtime
+- **Cloud Engineer / DevOps**: Hiểu và kiểm soát các lỗ hổng bảo mật trong Kubernetes
+- **Security Engineer**: Muốn mở rộng sang lĩnh vực cloud-native
+
+## Yêu cầu đầu vào
+
+Để đăng ký thi CKS, bạn **bắt buộc phải có chứng chỉ CKA (Certified Kubernetes Administrator)** còn hiệu lực.
+
+## Cấu trúc kỳ thi
+
+- Thời lượng: **2 giờ**
+- Hình thức: **Thực hành 100% trên môi trường terminal**
+- Ngôn ngữ: Tiếng Anh
+- Tổng số bài lab: 15–20 bài tùy đề
+- Đạt: >= **67** điểm
+
+## Nội dung chính trong đề
+
+### 🧱 Cluster Setup (15%)
+
+- Use Network security policies to restrict cluster level access
+- Use CIS benchmark to review the security configuration of Kubernetes components (etcd, kubelet, kubedns, kubeapi)
+- Properly set up Ingress with TLS
+- Protect node metadata and endpoints
+- Verify platform binaries before deploying
+
+### 🔐 Cluster Hardening (15%)
+
+- Use Role Based Access Controls to minimize exposure
+- Exercise caution in using service accounts e.g. disable defaults, minimize permissions on newly created ones
+- Restrict access to Kubernetes API
+- Upgrade Kubernetes to avoid vulnerabilities
+
+### 📦 System Hardening (15%)
+
+- Minimize host OS footprint (reduce attack surface)
+- Using least-privilege identity and access management
+- Minimize external access to the network
+- Appropriately use kernel hardening tools such as AppArmor, seccomp
+
+### 🔄 Minimize Microservice Vulnerabilities (20%)
+
+- Use appropriate pod security standards
+- Manage Kubernetes secrets
+- Understand and implement isolation techniques (multi-tenancy, sandboxed containers, etc.)
+- Implement Pod-to-Pod encryption (Cilium, Istio)
+
+### 🛡️ Supply Chain Security (20%)
+
+- Minimize base image footprint
+- Understand your supply chain (e.g. SBOM, CI/CD, artifact repositories)
+- Secure your supply chain (permitted registries, sign and validate artifacts, etc.)
+- Perform static analysis of user workloads and container images (e.g. Kubesec, KubeLinter)
+
+### 🛡️ Monitoring, Logging and Runtime Security (20%)
+
+- Perform behavioral analytics to detect malicious activities
+- Detect threats within physical infrastructure, apps, networks, data, users and workloads
+- Investigate and identify phases of attack and bad actors within the environment
+- Ensure immutability of containers at runtime
+- Use Kubernetes audit logs to monitor access
+
+## 🎯 Trải nghiệm thực tế khi thi
+
+<img
+  src="/static/images/point-cks.png"
+  alt="ky-thi-cks-la-ky-thi-kho-nhat-toi-tung-thi"
+  style={{ display: 'inline', marginRight: '5px', marginBottom: 0, marginTop: 0 }}
+  loading="lazy"
+/>
+Tôi từng thi trượt CKS ngay lần đầu vì chủ quan. Lúc đó, tôi nghĩ mình ôn cũng ổn, làm lab cũng
+nhiều, nhưng vào thi mới thấy áp lực thời gian và độ thực chiến cao hơn mình tưởng. kết quả chỉ được
+65 điểm vì sai sót cơ bản ở 1 câu hỏi trong đề thi
+
+Sau đó tôi ngồi nhìn lại toàn bộ cách học, luyện lại từng phần, đặc biệt là mấy phần dễ sai như AppArmor, audit log, hay network policies. Tôi cũng luyện tập nhiều hơn với môi trường gần giống kỳ thi thật.
+
+Thi lại lần hai, tôi bình tĩnh hơn, làm bài chắc tay hơn và cuối cùng cũng vượt qua. Đó là một trải nghiệm đáng nhớ, và mình học được rất nhiều từ lần trượt đầu tiên, và kết quả tôi đã pass khi được 76 điểm :D
+
+- Tôi làm **xong khoảng 85%** trong 90 phút đầu và dùng 30 phút cuối để soát lỗi
+- Một số câu mất thời gian do **quên flag nhỏ hoặc câu lệnh kubectl dài**
+- Nên luyện các thao tác với **vi/nano**, dùng lệnh `kubectl explain`, `kubectl auth can-i`, `trivy`, `opa`, v.v.
+
+### Lưu ý cá nhân:
+
+Kỳ thi được giám sát trực tuyến bởi PSI:
+
+- Trước thi cần **quay video 360 độ quanh phòng**
+- Không có giấy bút, tai nghe, màn hình phụ
+- Chỉ **1 tab duy nhất** được phép mở (terminal)
+- Có thể chuẩn bị **cốc nước không dán nhãn**
+- Cần **ID hợp lệ** để xác minh danh tính
+- Phải thật bình tĩnh vì câu hỏi rất dài và lồng nhau nhiều ý
+
+---
+
+✅ **Tips ôn luyện hiệu quả**:
+
+- Làm quen với môi trường thi bằng môi trường luyện tập của Killer.sh
+- Ôn kỹ các câu lệnh với `kubectl`, `kube-bench`, `trivy`, `opa`, `cosign`
+- Luyện tập trên môi trường thực tế với các kịch bản tạo cluster, cấu hình RBAC, NetworkPolicy
+- Nếu bạn cần ôn thi để có kết quả tốt có thể liên lạc với tôi qua số zalo, chúng ta cùng thảo luận.
+
+---
+
+## 📚 Tài nguyên ôn tập
+
+### Miễn phí
+
+- [CKS GitHub by walidshaari](https://github.com/walidshaari/Certified-Kubernetes-Security-Specialist)
+- [killer.sh CKS simulator (1 lần miễn phí)](https://killer.sh/)
+- [kubernetes.io/docs](https://kubernetes.io/docs/)
+- [Kubernetes Security Best Practices](https://sysdig.com/blog/kubernetes-security-best-practices/)
+
+### Trả phí
+
+- **KodeKloud CKS Course**: Có phần lab và mô phỏng đề
+- **Udemy CKS** – Khóa học của Zeal Vora / Mumshad Mannambeth
+- **Killer.sh** – Gói đề thi giả lập sát với thực tế
+
+---
+
+💬 Nếu bạn chuẩn bị đủ kỹ và luyện tay liên tục, CKS sẽ không quá khó. Đây là chứng chỉ cực kỳ giá trị với những ai muốn nâng tầm kỹ năng bảo mật hệ thống Kubernetes trong môi trường thực tế.
