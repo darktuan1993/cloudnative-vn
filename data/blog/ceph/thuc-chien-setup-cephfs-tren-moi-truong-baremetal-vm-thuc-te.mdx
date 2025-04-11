@@ -43,12 +43,13 @@ Môi trường | Số lượng VM| Ghi chú mô hình |
 > Tùy thuộc vào số lượng OSD, MDS, MON, MGR mà chúng ta có thể điều chỉnh thông số RAM và CPU cho phù hợp với nhu cầu sử dụng của mình.
 
 <h4 id="mo-hinh-thiet-ke">✨ Mô hình thiết kế</h4>
-Triển khai CephFS với 3 node ``` +-------------+ | Client(s) | +-------------+ | Mount CephFS |
+Triển khai CephFS với 6 node ``` +-------------+ | Client(s) | +-------------+ | Mount CephFS |
 +----------------------------+ | Ceph Cluster Network | +----------------------------+
-+------------+------------+-------------+------------+-----------+ | | | +--------+ +--------+
-+--------+ | node1 | | node2 | | node3 | |--------| |--------| |--------| | MON | | MON | | MON | |
-MGR(A) | | MGR(S) | | | | MDS(A) | | MDS(S) | | | | OSD | | OSD | | OSD | +--------+ +--------+
-+--------+
++------------+------------+-------------+------------+-----------+ | | | | | | +--------+ +--------+
++--------+ +--------+ +--------+ +--------+ | node1 | | node2 | | node3 | | node4 | | node5 | |
+node6 | |--------| |--------| |--------| |--------| |--------| |--------| | MON | | MON | | MON | |
+| | | | | | MGR(A) | | MGR(S) | | | | | | | | | | MDS(A) | | MDS(S) | | | | | | | | | | OSD | | OSD
+| | OSD | | OSD | | OSD | | OSD | +--------+ +--------+ +--------+ +--------+ +--------+ +--------+
 
 ```
 
